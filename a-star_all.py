@@ -1,4 +1,3 @@
-#destination: MAR
 #TO-DO: Run 'pip install opencv-python' on CMD
 import cv2
 import math
@@ -210,7 +209,9 @@ def main_function(colours, nodes, origin):
     curr_adj = [] #adjacent nodes of the currrent node
     f_ns = [] #list of the evaluation functions for each adjacent of the current node
     dist_acc = 0 #distance accumulated from the first node to the current
-    path = [] #list of the cities that compound the shortest path
+    path = [] #list of the cities that compound the current shortest path
+    size_path = 0 #size of the current shortest path
+    dead_end_list = [] #list of the dead ends
     to_visit = [] #list of the nodes to visit in each iteration
     nodes_adj = [] #pair of nodes that compound an adjacence
 
@@ -219,7 +220,7 @@ def main_function(colours, nodes, origin):
 
     for node in nodes:
         stop = False
-        if node != origin:
+        if (node != origin):
             dest = node
 
             calc_heuristics(dest) #calculates the heuristics (distances from all the nodes to the destination in straight line)
@@ -238,48 +239,54 @@ def main_function(colours, nodes, origin):
             i = 0
             print("++++++ Heuristics ++++++")
             for node in curr_adj:
-                if(not(node in path)): #if the node was not visited
+                if(not(node in path) and not(node in dead_end_list)): #if the node was not visited or if it is not a dead end
                     f_ns.append(round(heuristic[node][0]+(curr["dist"][i]+dist_acc),2))
                     to_visit.append(node)
                     print(node + " : " + str(heuristic[node][0]))
                 i += 1
-            print("++++++++++++++++++++++++")
-            print(to_visit)
-            print(f_ns)
-            aux = f_ns[0]
-            index_less = 0 #the index of the current less value of f_ns
-            i = 0
-            for value in f_ns:
-                if(value < aux):
-                    aux = value
-                    index_less = i
-                i += 1
-            dist_acc += curr["dist"][curr["adj"].index(to_visit[index_less])]
-            curr = nodes[to_visit[index_less]]
-            nodes_adj.append(curr["name"])
-            for pair in list_adj: 
-                if((nodes_adj[0] in pair[0]) and (nodes_adj[1] in pair[0])):
-                    cv2.line(image, (pair[1][0], pair[1][1]), (pair[1][2], pair[1][3]), colours[i_colour][1], 6) #draw the adjacence
-                    #print_dist(pair[1][0], pair[1][1], pair[1][2], pair[1][3], round(dist_acc,2))
-            nodes_adj.pop(0)
-            curr_adj = curr["adj"]
-            path.append(curr["name"])
-            print("f(n) = " + str(aux) + " -> " + curr["name"])
-            for node in to_visit:
-                if(node == dest):
-                    stop = True
-                    print("**The destination was found**")
-                    break
-            if (len(to_visit) == 0):
-                stop = True
-                print("**The shortest path cannot be found**")
-                print(path)
-            f_ns.clear()
-            to_visit.clear()
+            print("++++++++++++++++++++++++\n")
+
+            if (len(to_visit) != 0):  
+                print(to_visit)
+                print(f_ns)
+                aux = f_ns[0]
+                index_less = 0 #the index of the current less value of f_ns
+                i = 0
+                for value in f_ns:
+                    if(value < aux):
+                        aux = value
+                        index_less = i
+                    i += 1
+                dist_acc += curr["dist"][curr["adj"].index(to_visit[index_less])]
+                curr = nodes[to_visit[index_less]]
+                nodes_adj.append(curr["name"])
+                for pair in list_adj: 
+                    if((nodes_adj[0] in pair[0]) and (nodes_adj[1] in pair[0])):
+                        cv2.line(image, (pair[1][0], pair[1][1]), (pair[1][2], pair[1][3]), colours[i_colour][1], 6) #draw the adjacence
+                        #print_dist(pair[1][0], pair[1][1], pair[1][2], pair[1][3], round(dist_acc,2))
+                nodes_adj.pop(0)
+                curr_adj = curr["adj"]
+                path.append(curr["name"])
+                size_path += 1
+                print("f(n) = " + str(aux) + " -> " + curr["name"])
+                for node in to_visit:
+                    if(node == dest):
+                        stop = True
+                        print("**The destination was found**")
+                        break
+                f_ns.clear()
+                to_visit.clear()
+
+            elif (len(to_visit) == 0): #dead end
+                #stop = True
+                dead_end_list.append(curr["name"])
+                curr = nodes[path[size_path-1]]
+                curr_adj = curr["adj"]
+                print("DEAD END")
 
         print(path)
         print("Shortest distance:" + str(dist_acc))
-        print("---------------------------------")
+        print("-------------------------------------------------\n")
 
         dist_acc = 0
         path.clear()
