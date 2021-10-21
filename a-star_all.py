@@ -2,7 +2,7 @@
 import cv2
 import math
 import numpy as np
-image = cv2.imread('E:grafo_franca_full(pins).png',1)
+image = cv2.imread('.\grafo_franca_full(pins).png',1)
 
 #colours ----------------------------------
 colours = [
